@@ -1,5 +1,9 @@
 /META-INF/
-/.main.c.~undo-tree~
 *~
 /OEBPS/
 /mimetype
+*.o
+*#
+.cache/
+*.out
+*.zip
