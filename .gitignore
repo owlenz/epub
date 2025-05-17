@@ -1,9 +1,11 @@
-/META-INF/
 *~
-/OEBPS/
-/mimetype
 *.o
 *#
 .cache/
 *.out
 *.zip
+epub/
+build/
+.envrc
+.direnv
+.cache
