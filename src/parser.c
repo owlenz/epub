@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "xml.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <zip.h>
@@ -37,19 +38,29 @@ void read_node(struct xml_node *node, struct epub *epub) {
       xml_string_copy(xml_tag, tag_name, tag_length);
 
       if (strcmp(tag_name, "content") == 0) {
-        struct xml_string *xml_str = xml_node_content(label);
-        long length = xml_string_length(xml_str);
-        char *string = malloc(length + 1);
-        string[length] = '\0';
+        struct xml_string *xml_label_str = xml_node_content(label);
+        long label_length = xml_string_length(xml_label_str);
+        char *label_string = malloc(label_length + 1);
+        label_string[label_length] = '\0';
 
-        xml_string_copy(xml_str, string, length);
+        xml_string_copy(xml_label_str, label_string, label_length);
+        epub->toc[epub->pos].entry = malloc(strlen(label_string) + 1);
 
-        epub->toc[epub->pos] = malloc(strlen(string) + 1);
-        strcpy(epub->toc[epub->pos],string);
+        struct xml_string *xml_content_str = xml_node_attribute_content(content, 0);
+        long content_length = xml_string_length(xml_content_str);
+        char *content_string = malloc(content_length + 1);
+        content_string[content_length] = '\0';
+
+        xml_string_copy(xml_content_str, content_string, content_length);
+        epub->toc[epub->pos].file = malloc(strlen(content_string) + 1);
+
+        strcpy(epub->toc[epub->pos].entry,label_string);
+        strcpy(epub->toc[epub->pos].file,content_string);
 
         epub->pos++;
 
-        free(string);
+        free(label_string);
+        free(content_string);
         free(tag_name);
       }
     }
@@ -57,13 +68,49 @@ void read_node(struct xml_node *node, struct epub *epub) {
 
   for (int i = 0; i < x; i++) {
     struct xml_node *child = xml_node_child(node, i);
-
     read_node(child, epub);
   }
 }
 
-char **_parse_xml_buffer(char *buff, long buff_len) {
-  /* printf("%d",buff_len); */
+void read_node_html(struct xml_node *node, struct chapter *chapter) {
+  int x = xml_node_children(node);
+
+  if (x==0) {
+    struct xml_string *xml_tag = xml_node_name(node);
+    long tag_length = xml_string_length(xml_tag);
+    char tag_name[tag_length];
+    xml_string_copy(xml_tag, tag_name, tag_length);
+    tag_name[tag_length] = '\0';
+    if (strcmp(tag_name, "title") == 0) {
+      struct xml_string *xml_str = xml_node_content(node);
+      long length = xml_string_length(xml_str);
+      char string[length] ;
+      xml_string_copy(xml_str, string, length);
+      string[length] = '\0';
+
+      chapter->title = malloc(strlen(string) + 1);
+      strcpy(chapter->title,string);
+    } else {
+      struct xml_string *xml_str = xml_node_content(node);
+      long length = xml_string_length(xml_str);
+      char string[length] ;
+      xml_string_copy(xml_str, string, length);
+      string[length] = '\0';
+
+      strncpy(&chapter->buffer[chapter->pos], string, length);
+      chapter->buffer[chapter->pos + length] = '\n';
+      chapter->buffer[chapter->pos + length + 1] = '\n';
+      chapter->pos += length + 2;
+    }
+  }
+
+  for (int i = 0; i < x; i++) {
+    struct xml_node *child = xml_node_child(node, i);
+    read_node_html(child, chapter);
+  }
+}
+
+void *_parse_xml_buffer(char *buff, long buff_len, bool html) {
   struct xml_document *document = xml_parse_document(buff, buff_len);
 
   if (!document) {
@@ -72,23 +119,45 @@ char **_parse_xml_buffer(char *buff, long buff_len) {
   }
 
   struct xml_node *root = xml_document_root(document);
-  struct epub *epub_buffer = malloc(sizeof(struct epub));
+  if (html) {
+    struct chapter *epub_chapter = malloc(sizeof(struct epub));
 
-  epub_buffer->buffer = malloc(buff_len);
-  epub_buffer->toc = malloc(1500 * sizeof(char*));
-  epub_buffer->buffer_size = buff_len;
-  if (epub_buffer->buffer == NULL)
-    perror("cannot allocate memory");
+    epub_chapter->buffer = malloc(buff_len);
+    epub_chapter->title = malloc(200 * sizeof(char));
+    epub_chapter->pos = 0;
+    if (epub_chapter->buffer == NULL)
+      perror("cannot allocate memory");
 
-  epub_buffer->pos = 0;
-  read_node(root, epub_buffer);
+    read_node_html(root, epub_chapter);
+    if (document) {
+      xml_document_free(document, 1);
+      document = NULL;
+    }
+    return epub_chapter;
+  } else {
+    struct epub *epub_buffer = malloc(sizeof(struct epub));
 
-  xml_document_free(document, 1);
-  return epub_buffer->toc;
+    epub_buffer->buffer = malloc(buff_len);
+    epub_buffer->toc = malloc(1500 * sizeof(struct toc));
+    epub_buffer->buffer_size = buff_len;
+    if (epub_buffer->buffer == NULL)
+      perror("cannot allocate memory");
+
+    epub_buffer->pos = 0;
+    read_node(root, epub_buffer);
+
+    if (document) {
+      xml_document_free(document, 1);
+      document = NULL;
+    }
+    return epub_buffer->toc;
+  }
 }
 
-char **read_zip_file(char *name) {
+void *read_zip_file(char *name) {
   zip_stat_t *finfo = malloc(400 * sizeof(int));
+  if (finfo == NULL)
+    perror("error allocating memory");
   zip_stat_init(finfo);
 
   int err = zip_stat(epub_zip.zip, name, 0, finfo);
@@ -103,8 +172,11 @@ char **read_zip_file(char *name) {
     zip_close(epub_zip.zip);
     return NULL;
   }
-  printf("file:%s size: %ld\n", finfo->name, finfo->size);
 
+  bool html = false;
+  if (strstr(finfo->name, "xhtml")) {
+    html = true;
+  }
   char *buff = malloc(finfo->size);
   if (buff == NULL) {
     perror("buffer");
@@ -113,7 +185,8 @@ char **read_zip_file(char *name) {
   if (bytes < 0) {
     fprintf(stderr, "error reading file %s\n", finfo->name);
   }
-  return _parse_xml_buffer(buff, strlen(buff));
+  free(finfo);
+  return _parse_xml_buffer(buff, strlen(buff), html);
 }
 
 void zip_init() {
