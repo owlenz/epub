@@ -129,6 +129,7 @@ void *_parse_xml_buffer(char *buff, long buff_len, bool html) {
       perror("cannot allocate memory");
 
     read_node_html(root, epub_chapter);
+    epub_chapter->buffer[epub_chapter->pos - 1] = '\0';
     if (document) {
       xml_document_free(document, 1);
       document = NULL;
