@@ -1,8 +1,9 @@
 #ifndef PARSER_H
 #define PARSER_H
 #include "xml.h"
+#include "zip.h"
 
-struct epub {
+struct pubby_epub {
   struct toc *toc;
   char *buffer;
   int pos;
@@ -20,8 +21,22 @@ struct chapter {
   int pos;
 };
 
-void read_node(struct xml_node *node, struct epub *epub);
+typedef struct _zip_t {
+  zip_t *zip;
+  uint8_t *root;
+  long size;
+} pubby_zip;
+
+extern pubby_zip *epub_zip;
+
+typedef struct {
+  uint8_t *buff;
+  size_t buff_len;
+} epub_string;
+
+void read_node(struct xml_node *node, struct pubby_epub *epub);
 void zip_init();
-void *read_zip_file(char *);
+epub_string *read_zip_file(char *);
+struct toc *read_toc(char *);
 
 #endif

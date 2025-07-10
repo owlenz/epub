@@ -4,6 +4,7 @@
 #include "gtk/gtkshortcut.h"
 #include "parser.h"
 #include <adwaita.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -48,11 +49,11 @@ static void button_activate(GtkWidget *btn, gpointer user_data) {
   char xdd[200] = "OEBPS/";
   strcat(xdd, data->file_path);
 
-  struct chapter *chap = read_zip_file(xdd);
+  /* struct chapter *chap = read_zip_file(xdd); */
 
-  buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(data->text_view));
-  gtk_text_buffer_set_text(buffer, chap->buffer, -1);
-  gtk_stack_set_visible_child_name(GTK_STACK(data->container), "text");
+  /* buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(data->text_view)); */
+  /* gtk_text_buffer_set_text(buffer, chap->buffer, -1); */
+  /* gtk_stack_set_visible_child_name(GTK_STACK(data->container), "text"); */
 }
 
 GtkWidget *create_scrollable(GtkWidget *child, int width, int height) {
@@ -65,35 +66,40 @@ GtkWidget *create_scrollable(GtkWidget *child, int width, int height) {
   return scrolled;
 }
 
+// table of contents
 void toc_buttons(GtkWidget *stack, GtkWidget *text_view, GtkWidget *toc_box) {
   zip_init();
-  struct toc *toc = read_zip_file("OEBPS/toc.ncx");
+
+  uint8_t *toc_str = calloc(sizeof(uint8_t),100);
+  strcpy(toc_str, epub_zip->root);
+  strcat(toc_str, "toc.ncx");
+  struct toc *toc = read_toc(toc_str);
   g_print("xddmors: %s\n", toc[50].file);
-  int i = 1240;
-  for (int n = 0; n < i; n++) {
-    GtkWidget *label;
-    GtkWidget *button;
+  /* int i = 1240; */
+  /* for (int n = 0; n < i; n++) { */
+  /*   GtkWidget *label; */
+  /*   GtkWidget *button; */
 
-    char *text_label = malloc(101 * sizeof(char));
-    strncpy(text_label, toc[n].entry, 100);
+  /*   char *text_label = malloc(101 * sizeof(char)); */
+  /*   strncpy(text_label, toc[n].entry, 100); */
 
-    label = gtk_label_new(text_label);
-    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
-    gtk_widget_set_halign(label, GTK_ALIGN_START);
+  /*   label = gtk_label_new(text_label); */
+  /*   gtk_label_set_wrap(GTK_LABEL(label), TRUE); */
+  /*   gtk_widget_set_halign(label, GTK_ALIGN_START); */
 
-    button = gtk_button_new();
-    open_chapter_t *chapter = malloc(sizeof(open_chapter_t));
-    chapter->file_path = toc[n].file;
-    chapter->container = stack;
-    chapter->text_view = text_view;
-    g_signal_connect(button, "clicked", G_CALLBACK(button_activate), chapter);
+  /*   button = gtk_button_new(); */
+  /*   open_chapter_t *chapter = malloc(sizeof(open_chapter_t)); */
+  /*   chapter->file_path = toc[n].file; */
+  /*   chapter->container = stack; */
+  /*   chapter->text_view = text_view; */
+  /*   g_signal_connect(button, "clicked", G_CALLBACK(button_activate), chapter); */
 
-    gtk_widget_set_size_request(button, 200, -1);
-    gtk_button_set_child(GTK_BUTTON(button), label);
+  /*   gtk_widget_set_size_request(button, 200, -1); */
+  /*   gtk_button_set_child(GTK_BUTTON(button), label); */
 
-    all_buttons = g_list_append(all_buttons,button);
-    gtk_box_append(GTK_BOX(toc_box), button);
-  }
+  /*   all_buttons = g_list_append(all_buttons,button); */
+  /*   gtk_box_append(GTK_BOX(toc_box), button); */
+  /* } */
 }
 
 static void filter_buttons(GtkSearchEntry *entry, gpointer t) {
