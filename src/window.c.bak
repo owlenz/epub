@@ -121,23 +121,72 @@ static void filter_buttons(GtkSearchEntry *entry, gpointer t) {
 
 static void activate(GtkApplication *app, gpointer user_data) {
   adw_init();
-  GtkBuilder *builder = gtk_builder_new_from_file("pubby.ui");
-  if (!builder) {
-    g_print("Error: Could not load pubby.ui\n");
-    return;
-  }
-  GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
-  GtkWidget *search_bar = GTK_WIDGET(gtk_builder_get_object(builder, "search_bar"));
-  GtkWidget *search_entry = GTK_WIDGET(gtk_builder_get_object(builder, "search_entry"));
+  GtkWidget *window;
+  GtkWidget *toc_scrolled;
   GtkWidget *toc_box;
   GtkWidget *toc_button;
   GtkWidget *text_view;
   GtkWidget *stack;
 
-  // connect searchbar to entry
-  gtk_search_bar_connect_entry(GTK_SEARCH_BAR(search_bar), GTK_EDITABLE(search_entry));
+  GtkCssProvider *css_provider = gtk_css_provider_new();
 
-  gtk_application_add_window(app, GTK_WINDOW(window));
+  gtk_css_provider_load_from_string(
+      css_provider, "textview {background-color: #FFFFFF; padding: 10px;}");
+
+  gtk_style_context_add_provider_for_display(
+      gdk_display_get_default(), GTK_STYLE_PROVIDER(css_provider), -1);
+
+  window = adw_application_window_new(GTK_APPLICATION(app));
+  gtk_window_set_title(GTK_WINDOW(window), "pubby");
+  gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
+
+  toc_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+  gtk_widget_set_halign(toc_box, GTK_ALIGN_CENTER);
+  toc_scrolled = create_scrollable(toc_box, 300, 100);
+
+  stack = gtk_stack_new();
+  gtk_stack_add_named(GTK_STACK(stack), toc_scrolled, "toc");
+  adw_application_window_set_content(ADW_APPLICATION_WINDOW(window), stack);
+
+  GtkEventController *key_controller = gtk_event_controller_key_new();
+  gtk_widget_add_controller(window, key_controller);
+  g_signal_connect(key_controller, "key-pressed", G_CALLBACK(key_pressed),
+                   stack);
+
+  text_view = gtk_text_view_new();
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
+  gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(text_view), FALSE);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD);
+  gtk_widget_set_size_request(text_view, 1000, -1);
+  gtk_widget_set_halign(text_view, GTK_ALIGN_CENTER);
+
+  GtkWidget *text_scrollable = create_scrollable(text_view, 400, -1);
+  gtk_stack_add_named(GTK_STACK(stack), text_scrollable, "text");
+
+  /* gtk_widget_set_can_focus(text_view, false); */
+  GtkEventController *text_cont = gtk_event_controller_key_new();
+  gtk_widget_add_controller(text_view, text_cont);
+  g_signal_connect(text_cont, "key-pressed", G_CALLBACK(key_pressed), stack);
+
+  GtkWidget *search_bar = gtk_search_bar_new();
+  gtk_box_append(GTK_BOX(toc_box), search_bar);
+  gtk_search_bar_set_key_capture_widget(GTK_SEARCH_BAR(search_bar), window);
+  GtkWidget *search_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+  gtk_search_bar_set_child(GTK_SEARCH_BAR(search_bar), search_box);
+
+  GtkWidget *search_entry = gtk_search_entry_new();
+  gtk_box_append(GTK_BOX(search_box), search_entry);
+
+  gtk_search_bar_connect_entry(GTK_SEARCH_BAR(search_bar),
+                               GTK_EDITABLE(search_entry));
+
+
+  toc_buttons(stack, text_view, toc_box);
+
+  g_signal_connect(search_entry, "search-changed", G_CALLBACK(filter_buttons), NULL);
+  
+  gtk_stack_set_visible_child_name(GTK_STACK(stack), "toc");
+
   gtk_window_present(GTK_WINDOW(window));
 }
 

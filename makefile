@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g `pkg-config --cflags libadwaita-1 gtk4` -I./include -I./xml.c/src
+CFLAGS = -g -std=c99 `pkg-config --cflags libadwaita-1 gtk4` -I./include -I./xml.c/src
 LDFLAGS = -L./xml.c/build -lxml -lzip `pkg-config --libs libadwaita-1 gtk4`
 BUILD_DIR = ./build
 VPATH = src include
