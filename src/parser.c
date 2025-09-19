@@ -135,7 +135,6 @@ uint8_t *_read_container(struct xml_node *node) {
   }
 }
 
-
 void read_node_html(struct xml_node *node, struct chapter *chapter) {
   int x = xml_node_children(node);
 
@@ -238,7 +237,7 @@ epub_string *read_zip_file(uint8_t *name) {
 }
 
 struct chapter *read_html(uint8_t *file_name) {
-  uint8_t *file_path = calloc(sizeof(uint8_t),200);
+  uint8_t *file_path = calloc(sizeof(uint8_t), 200);
   strcpy((char *)file_path, (const char *)epub_zip->root);
   strcat((char *)file_path, (const char *)file_name);
   epub_string *buff = read_zip_file(file_path);
@@ -250,7 +249,7 @@ struct chapter *read_html(uint8_t *file_name) {
 }
 
 struct toc *read_toc() {
-  uint8_t *toc_str = calloc(sizeof(uint8_t),100);
+  uint8_t *toc_str = calloc(sizeof(uint8_t), 100);
   strcpy((char *)toc_str, (const char *)epub_zip->root);
   strcat((char *)toc_str, "toc.ncx");
   epub_string *buff = read_zip_file(toc_str);
@@ -263,7 +262,8 @@ struct toc *read_toc() {
 
 uint8_t *read_container() {
   epub_string *buff = read_zip_file((uint8_t *)"META-INF/container.xml");
-  struct xml_document *document = xml_parse_document(buff->buff, buff->buff_len);
+  struct xml_document *document =
+      xml_parse_document(buff->buff, buff->buff_len);
   struct xml_node *node = _parse_xml_buffer2(document);
   uint8_t *balls = _read_container(node);
 
