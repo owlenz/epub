@@ -50,6 +50,10 @@ struct xml_node *_parse_xml_buffer2(struct xml_document *document) {
   }
 
   struct xml_node *root = xml_document_root(document);
+  struct xml_string *str = xml_node_name(root);
+  uint8_t *buff = malloc(xml_string_length(str));
+  xml_string_copy(str,buff,xml_string_length(str));
+  printf("alor %s\n",buff);
 
   return root;
 }
@@ -107,8 +111,16 @@ void read_node(struct xml_node *node, struct pubby_epub *epub) {
 
 uint8_t *_read_container(struct xml_node *node) {
   size_t child_num = xml_node_children(node);
+  struct xml_node *rootfiles =
+      xml_node_child(node, 0);
   struct xml_node *rootfile =
-      xml_easy_child(node, (const uint8_t *)"rootfiles", "rootfile");
+      xml_node_child(rootfiles, 0);
+
+  struct xml_string *xml_tag = xml_node_name(rootfile);
+  long tag_length = xml_string_length(xml_tag);
+  uint8_t *tag_name= malloc(tag_length);
+  xml_string_copy(xml_tag, tag_name, tag_length);
+  printf("aaaaaaaaaaaah %s\n", tag_name);
   if (rootfile) {
     size_t attr_num = xml_node_attributes(node);
     if (attr_num == 0)
@@ -121,6 +133,7 @@ uint8_t *_read_container(struct xml_node *node) {
       uint8_t *attr_name = malloc(length);
       xml_string_copy(xml_attr_name, attr_name, length);
       attr_name[length] = '\0';
+      printf("aaaaaaaaaaaah %s\n",attr_name);
 
       if (strcmp((const char *)attr_name, "full-path") == 0) {
         struct xml_string *xml_attr_value =
@@ -261,11 +274,13 @@ struct toc *read_toc() {
 }
 
 uint8_t *read_container() {
+  printf("test ");
   epub_string *buff = read_zip_file((uint8_t *)"META-INF/container.xml");
   struct xml_document *document =
       xml_parse_document(buff->buff, buff->buff_len);
   struct xml_node *node = _parse_xml_buffer2(document);
   uint8_t *balls = _read_container(node);
+  printf("test %s\n",balls);
 
   if (document) {
     xml_document_free(document, 1);
@@ -277,12 +292,14 @@ uint8_t *read_container() {
   return balls;
 }
 
-void zip_init() {
+void zip_init(const char *path) {
   epub_zip = malloc(sizeof(pubby_zip));
   epub_zip->zip = zip_open("./sv.epub", ZIP_RDONLY, NULL);
   if (epub_zip->zip == NULL) {
     perror("cannot open epub file");
+    exit(0);
   }
+
   epub_zip->size = zip_get_num_entries(epub_zip->zip, 0);
 
   // read container.xml

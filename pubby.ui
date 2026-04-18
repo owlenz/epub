@@ -1,161 +1,116 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- Created with Cambalache 0.94.1 -->
 <interface>
-  <!-- interface-name test.ui -->
   <requires lib="gtk" version="4.14"/>
   <requires lib="libadwaita" version="1.0"/>
+
   <object class="AdwApplicationWindow" id="window">
+
     <child>
-      <object class="GtkStack">
+      <object class="GtkStack" id="window_stack">
+
+        <!-- ==================== HOME PAGE ==================== -->
         <child>
-          <object class="GtkBox" id="toc_box">
-            <property name="orientation">vertical</property>
-            <child>
-              <object class="GtkSearchBar" id="search_bar">
-                <property name="key-capture-widget">window</property>
-                <property name="search-mode-enabled">True</property>
+          <object class="GtkStackPage">
+            <property name="name">home-page</property>
+            <property name="title">Home</property>
+            <property name="child">
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="valign">center</property>
+                <property name="halign">center</property>
+                <property name="spacing">12</property>
+
                 <child>
-                  <object class="GtkBox">
-                    <child>
-                      <object class="GtkSearchEntry" id="search_entry"/>
-                    </child>
+                  <object class="GtkButton" id="btn_open">
+                    <property name="label">Open EPUB File</property>
+                    <signal name="clicked" 
+                            handler="on_open_file_clicked" 
+                            object="window_stack" 
+                            swapped="true"/>
                   </object>
                 </child>
               </object>
-            </child>
-            <child>
-              <object class="GtkScrolledWindow">
-                <property name="vexpand">True</property>
-                <child>
-                  <object class="GtkBox">
-                    <property name="orientation">vertical</property>
-                    <property name="spacing">6</property>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="halign">center</property>
-                        <property name="hexpand">True</property>
-                        <property name="label">dsadssasasad</property>
-                        <property name="valign">baseline</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
+            </property>
           </object>
         </child>
+
+        <!-- ==================== BOOK PAGE ==================== -->
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">book-page</property>
+            <property name="title">Book</property>
+            <property name="child">
+              <object class="GtkStack" id="epub_stack">
+
+                <!-- Text / Reading Page -->
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">text-page</property>
+                    <property name="title">Text</property>
+                    <property name="child">
+                      <object class="GtkScrolledWindow" id="text_scrolled">
+                        <property name="hscrollbar-policy">never</property>
+                        <property name="vscrollbar-policy">automatic</property>
+                        <property name="vexpand">true</property>
+
+                        <child>
+                          <object class="GtkTextView" id="text_view">
+                            <property name="editable">false</property>
+                            <property name="cursor-visible">false</property>
+                            <property name="wrap-mode">word</property>
+                            <property name="left-margin">18</property>
+                            <property name="right-margin">18</property>
+                            <property name="top-margin">12</property>
+                            <property name="bottom-margin">12</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+
+                <!-- Table of Contents Page -->
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">toc-page</property>
+                    <property name="title">Contents</property>
+                    <property name="child">
+                      <object class="GtkBox" id="toc_view">
+                        <property name="orientation">vertical</property>
+
+                        <child>
+                          <object class="GtkSearchBar" id="search_bar">
+                            <property name="key-capture-widget">window</property>
+                            <property name="search-mode-enabled">true</property>
+                            <child>
+                              <object class="GtkSearchEntry" id="search_entry">
+                                <signal name="search-changed" handler="filter_buttons"/>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="GtkScrolledWindow">
+                            <property name="vexpand">true</property>
+                            <child>
+                              <object class="GtkBox" id="toc_box">
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">6</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+
+              </object>
+            </property>
+          </object>
+        </child>
+
       </object>
     </child>
   </object>

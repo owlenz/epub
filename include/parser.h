@@ -36,7 +36,7 @@ typedef struct {
 } epub_string;
 
 void read_node(struct xml_node *node, struct pubby_epub *epub);
-void zip_init();
+void zip_init(const char *path);
 epub_string *read_zip_file(uint8_t *);
 struct toc *read_toc();
 struct chapter *read_html(uint8_t *);

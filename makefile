@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -g -std=c99 `pkg-config --cflags libadwaita-1 gtk4` -I./include -I./xml.c/src
-LDFLAGS = -L./xml.c/build -lxml -lzip `pkg-config --libs libadwaita-1 gtk4`
+CFLAGS = -g -std=c99 `pkg-config --cflags libadwaita-1 gtk4` -I./include -I./xml.c/src -Wl,--export-dynamic
+LDFLAGS = -L./xml.c/build -lxml  -lzip `pkg-config --libs libadwaita-1 gtk4 gmodule-export-2.0`
 BUILD_DIR = ./build
 VPATH = src include
 SRC = main.c window.c parser.c
@@ -15,6 +15,7 @@ $(TARGET): $(OBJS)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+	mkdir -p ./xml.c/$(BUILD_DIR)
 
 $(BUILD_DIR)/%.o: %.c
 	$(CC) -c $< $(CFLAGS) -o $@
