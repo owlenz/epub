@@ -147,45 +147,69 @@ uint8_t *_read_container(struct xml_node *node) {
     }
   }
 }
+// tag number
+html_tag *read_node_html(struct xml_node *node, struct chapter *chapter) {
 
-void read_node_html(struct xml_node *node, struct chapter *chapter) {
-  int x = xml_node_children(node);
+  struct xml_string *xml_tag = xml_node_name(node);
+  long tag_length = xml_string_length(xml_tag);
+  char *tag_name = malloc(tag_length + 1);
+  xml_string_copy(xml_tag, tag_name, tag_length);
+  tag_name[tag_length] = '\0';
 
-  if (x == 0) {
-    struct xml_string *xml_tag = xml_node_name(node);
-    long tag_length = xml_string_length(xml_tag);
-    char tag_name[tag_length];
-    xml_string_copy(xml_tag, tag_name, tag_length);
+  struct xml_string *xml_str = xml_node_content(node);
 
-    tag_name[tag_length] = '\0';
-    if (strcmp(tag_name, "title") == 0) {
-      struct xml_string *xml_str = xml_node_content(node);
-      long length = xml_string_length(xml_str);
-      char string[length];
-      xml_string_copy(xml_str, string, length);
-      string[length] = '\0';
+  long length = (xml_str != NULL) ? xml_string_length(xml_str) : 0;
+  char *string = malloc(length + 1);
+  xml_string_copy(xml_str, string, length);
+  string[length] = '\0';
+  /* printf("tag:%s content:%s\n", tag_name, string); */
 
-      chapter->title = malloc(strlen(string) + 1);
-      strcpy(chapter->title, string);
-    } else {
-      struct xml_string *xml_str = xml_node_content(node);
-      long length = xml_string_length(xml_str);
-      char string[length];
-      xml_string_copy(xml_str, string, length);
-      string[length] = '\0';
+  html_tag *tag = calloc(1, sizeof(html_tag));
+  tag->content = string;
+  tag->tag_name = tag_name;
 
-      strncpy(&chapter->buffer[chapter->pos], string, length);
-      chapter->buffer[chapter->pos + length] = '\n';
-      chapter->buffer[chapter->pos + length + 1] = '\n';
-      chapter->pos += length + 2;
+  if (strcmp(tag_name, "title") == 0) {
+    chapter->title = malloc(strlen(string) + 1);
+    strcpy(chapter->title, string);
+  } else {
+    strncpy(&chapter->buffer[chapter->pos], string, length);
+    chapter->buffer[chapter->pos + length] = '\n';
+    chapter->pos += length + 1;
+  }
+
+  int num_children = xml_node_children(node);
+  /* printf("%s\n",tag->tag_name); */
+  if (num_children > 0) {
+    tag->children = malloc(num_children * sizeof(html_tag *));
+    tag->n_children = 0;
+
+    for (int i = 0; i < num_children; i++) {
+      struct xml_node *child_node = xml_node_child(node, i);
+      html_tag *child_tag = read_node_html(child_node, chapter);
+      if (child_tag) {
+        tag->children[tag->n_children++] = child_tag;
+        /* printf("{%s\n\t %s}\n",chapter->tags[0]->tag_name, chapter->tags[0]->children[0]->tag_name); */
+      }
     }
   }
 
-  for (int i = 0; i < x; i++) {
-    struct xml_node *child = xml_node_child(node, i);
-    read_node_html(child, chapter);
-  }
+  return tag;
 }
+
+#ifdef DEBUG
+static void debug_html_tree_level(const html_tag *tag, int level) {
+    if (!tag) return;
+    for (int i = 0; i < level; ++i) putchar('\t');
+    printf("%s\n", tag->tag_name ? tag->tag_name : "(null)");
+    for (size_t i = 0; i < tag->n_children; ++i) {
+        const html_tag *child = tag->children ? tag->children[i] : NULL;
+        debug_html_tree_level(child, level + 1);
+    }
+}
+void debug_html_tree(const html_tag *tag) { debug_html_tree_level(tag, 0); }
+#else
+void debug_html_tree(const html_tag *tag){}
+#endif
 
 void *_parse_html_buffer(uint8_t *buff, long buff_len) {
   struct xml_document *document = xml_parse_document(buff, buff_len);
@@ -196,15 +220,21 @@ void *_parse_html_buffer(uint8_t *buff, long buff_len) {
   }
 
   struct xml_node *root = xml_document_root(document);
-  struct chapter *epub_chapter = malloc(sizeof(struct pubby_epub));
+  struct chapter *epub_chapter = malloc(sizeof(struct chapter));
 
   epub_chapter->buffer = malloc(buff_len);
   epub_chapter->title = malloc(200 * sizeof(char));
+  epub_chapter->n_tags = 0;
   epub_chapter->pos = 0;
+  epub_chapter->html = xml_document_html(document);
   if (epub_chapter->buffer == NULL)
     perror("cannot allocate memory");
 
-  read_node_html(root, epub_chapter);
+  epub_chapter->tags = read_node_html(root, epub_chapter);
+  html_tag *tag = epub_chapter->tags;
+
+  debug_html_tree(tag);
+
   epub_chapter->buffer[epub_chapter->pos - 1] = '\0';
   if (document) {
     xml_document_free(document, 1);
@@ -280,7 +310,7 @@ uint8_t *read_container() {
       xml_parse_document(buff->buff, buff->buff_len);
   struct xml_node *node = _parse_xml_buffer2(document);
   uint8_t *balls = _read_container(node);
-  printf("test %s\n",balls);
+  printf("test %s\n", balls);
 
   if (document) {
     xml_document_free(document, 1);
@@ -294,7 +324,7 @@ uint8_t *read_container() {
 
 void zip_init(const char *path) {
   epub_zip = malloc(sizeof(pubby_zip));
-  epub_zip->zip = zip_open("./sv.epub", ZIP_RDONLY, NULL);
+  epub_zip->zip = zip_open(path, ZIP_RDONLY, NULL);
   if (epub_zip->zip == NULL) {
     perror("cannot open epub file");
     exit(0);

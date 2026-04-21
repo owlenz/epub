@@ -54,14 +54,10 @@
                         <property name="vexpand">true</property>
 
                         <child>
-                          <object class="GtkTextView" id="text_view">
-                            <property name="editable">false</property>
-                            <property name="cursor-visible">false</property>
-                            <property name="wrap-mode">word</property>
-                            <property name="left-margin">18</property>
-                            <property name="right-margin">18</property>
-                            <property name="top-margin">12</property>
-                            <property name="bottom-margin">12</property>
+                          <object class="GtkBox" id="text_view">
+                            <property name="orientation">vertical</property>
+                            <property name="hexpand">true</property>
+                            <property name="vexpand">true</property>
                           </object>
                         </child>
                       </object>

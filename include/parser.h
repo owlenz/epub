@@ -3,6 +3,7 @@
 #include "xml.h"
 #include "zip.h"
 #include <stdint.h>
+#include <sys/stat.h>
 
 struct pubby_epub {
   struct toc *toc;
@@ -16,8 +17,19 @@ struct toc {
   uint8_t *file;
 };
 
+typedef struct html_tag {
+  char *tag_name;
+  char *content;
+  struct html_tag **children;
+  int n_children;
+  char *css;
+} html_tag;
+
 struct chapter {
   char *buffer;
+  char *html;
+  html_tag *tags;
+  int n_tags;
   char *title;
   int pos;
 };

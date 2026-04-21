@@ -1,0 +1,64 @@
+/* ==================== General ==================== */
+window {
+    background-color: @window_bg_color;   /* respects Adwaita theme */
+}
+
+/* Make the text view look like a book page */
+#text_view {
+    font-family: "serif";
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 40px 50px;
+    background-color: #fffef7;           /* warm paper color */
+    color: #2c2c2c;
+    border: 1px solid @borders_color;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode support (Adwaita handles most, but you can override) */
+@media (prefers-color-scheme: dark) {
+    #text_view {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+}
+
+/* Home page button - make it bigger and nicer */
+#btn_open {
+    padding: 12px 32px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* TOC buttons */
+#toc_box button {
+    padding: 10px 14px;
+    border-radius: 6px;
+}
+
+#toc_box button:hover {
+    background-color: @hover_bg_color;
+}
+
+/* Search bar improvements */
+#search_bar {
+    margin: 8px;
+}
+
+/* Make scrolled window for text nicer */
+#text_scrolled {
+    border: none;
+    background: transparent;
+}
+
+/* Optional: Add nice heading styles if you use labels */
+.title-1 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.card {
+    background-color: @card_bg_color;
+    border-radius: 12px;
+    padding: 12px;
+}

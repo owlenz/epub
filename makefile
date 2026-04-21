@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -g -std=c99 `pkg-config --cflags libadwaita-1 gtk4` -I./include -I./xml.c/src -Wl,--export-dynamic
-LDFLAGS = -L./xml.c/build -lxml  -lzip `pkg-config --libs libadwaita-1 gtk4 gmodule-export-2.0`
+CFLAGS = -g `pkg-config --cflags libadwaita-1 webkitgtk-6.0 gtk4` -I./include -I./xml.c/src -Wl,--export-dynamic
+LDFLAGS = -L./xml.c/build -lxml  -lzip `pkg-config --libs webkitgtk-6.0 libadwaita-1 gtk4 gmodule-export-2.0`
 BUILD_DIR = ./build
 VPATH = src include
 SRC = main.c window.c parser.c

@@ -4,12 +4,14 @@
 #include "glib-object.h"
 #include "glib.h"
 #include "gtk/gtk.h"
+#include "gtk/gtkcssprovider.h"
 #include "gtk/gtkshortcut.h"
 #include "parser.h"
 #include <adwaita.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <webkit/webkit.h>
 
 struct toc_button_t {
   char *file_path;
@@ -20,6 +22,7 @@ typedef struct {
   GtkWidget *container;
   uint8_t *file_path;
   GtkWidget *text_view;
+  struct chapter *chapter;
 } open_chapter_t;
 
 GList *all_buttons = NULL;
@@ -48,15 +51,102 @@ static gboolean key_pressed(GtkEventControllerKey *controller, guint keyval,
   return FALSE;
 }
 
+typedef enum {
+  TAG_DIV,
+  TAG_P,
+  TAG_H1,
+  TAG_H2,
+  TAG_H3,
+  TAG_H4,
+  TAG_H5,
+  TAG_SPAN,
+  TAG_I,
+  TAG_A,
+  TAG_UNKNOWN,  
+} TagType;
+
+TagType tag_from_string(const char *s) {
+  if (!s)
+    return TAG_UNKNOWN;
+  if (strcmp(s, "div") == 0)
+    return TAG_DIV;
+  if (strcmp(s, "span") == 0)
+    return TAG_SPAN;
+  if (strcmp(s, "p") == 0)
+    return TAG_P;
+  if (strcmp(s, "h1") == 0)
+    return TAG_H1;
+  if (strcmp(s, "h2") == 0)
+    return TAG_H2;
+  if (strcmp(s, "h3") == 0)
+    return TAG_H3;
+  if (strcmp(s, "h4") == 0)
+    return TAG_H4;
+  if (strcmp(s, "h5") == 0)
+    return TAG_H5;
+  if (strcmp(s, "i") == 0)
+    return TAG_I;
+  if (strcmp(s, "a") == 0)
+    return TAG_A;
+  return TAG_UNKNOWN;
+}
+void _display_chapter(html_tag *tag, int depth) {
+  if (!tag)
+    return;
+  for (int i = 0; i < depth; i++)
+    putchar(' ');
+  printf("%s\n", tag->tag_name);
+
+  switch (tag_from_string(tag->tag_name)) {
+  case TAG_DIV:
+    puts("handle <div>");
+    GtkWidget *div = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    break;
+  case TAG_SPAN:
+    puts("handle <span>");
+    break;
+  case TAG_P:
+    puts("handle <p>");
+    break;
+  case TAG_A:
+    puts("handle <a>");
+    break;
+  default:
+    puts("unknown tag");
+    break;
+  }
+  for (int i = 0; i < tag->n_children; i++) {
+    _display_chapter(tag->children[i], depth + 2);
+  }
+};
+
+void display_chapter(open_chapter_t *chapter_data) {
+  _display_chapter(chapter_data->chapter->tags, 0);
+};
+
 static void button_activate(GtkWidget *btn, gpointer user_data) {
   open_chapter_t *data = (open_chapter_t *)user_data;
-  GtkTextBuffer *buffer;
   g_print("button: %s\n", data->file_path);
 
   struct chapter *chap = read_html(data->file_path);
+  data->chapter = chap;
+  /* display_chapter(data); */
 
-  buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(data->text_view));
-  gtk_text_buffer_set_text(buffer, chap->buffer, -1);
+  GtkWidget *child;
+  while ((child = gtk_widget_get_first_child(GTK_WIDGET(data->text_view))) != NULL) {
+    gtk_box_remove(GTK_BOX(data->text_view), child);
+  }
+
+  WebKitWebView *view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+  gtk_widget_set_hexpand(GTK_WIDGET(view), TRUE);
+  gtk_widget_set_vexpand(GTK_WIDGET(view), TRUE);
+
+  printf("%s\n", data->chapter->html);
+  webkit_web_view_load_html(view, data->chapter->html,
+                            "file:///tmp/output/OEBPS/Text/");
+
+  gtk_box_append(GTK_BOX(data->text_view), GTK_WIDGET(view));
+
   gtk_stack_set_visible_child_name(GTK_STACK(data->container), "text-page");
 }
 
@@ -74,8 +164,8 @@ GtkWidget *create_scrollable(GtkWidget *child, int width, int height) {
 void epub_init(GtkWidget *stack, GtkWidget *text_view, GtkWidget *toc_box, const char *path) {
   zip_init(path);
   struct toc *toc = read_toc();
-  g_print("xddmors: %s\n", toc[50].file);
-  int i = 1240;
+  g_print("xddmors: %s\n", toc[5].file);
+  int i = 10;
   for (int n = 0; n < i; n++) {
     GtkWidget *label;
     GtkWidget *button;
@@ -200,9 +290,18 @@ static void activate(GtkApplication *app, gpointer user_data) {
   GtkWidget *search_entry = GTK_WIDGET(gtk_builder_get_object(builder, "search_entry"));
   GtkWidget *main_stack = GTK_WIDGET(gtk_builder_get_object(builder,"window_stack"));
   GtkWidget *epub_stack = GTK_WIDGET(gtk_builder_get_object(builder,"epub_stack"));
-  GtkWidget *toc_box;
-  GtkWidget *toc_button;
-  GtkWidget *text_view;
+  GtkCssProvider *provider = gtk_css_provider_new();
+
+  GFile *file = g_file_new_for_path("./src/styles/style.css");
+
+  gtk_css_provider_load_from_file(provider,file);
+  g_object_unref(file);
+
+  gtk_style_context_add_provider_for_display(
+      gdk_display_get_default(), GTK_STYLE_PROVIDER(provider),
+      GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+  g_object_unref(provider);
 
   // connect searchbar to entry
   gtk_search_bar_connect_entry(GTK_SEARCH_BAR(search_bar), GTK_EDITABLE(search_entry));
